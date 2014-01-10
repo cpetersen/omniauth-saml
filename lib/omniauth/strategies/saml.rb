@@ -32,31 +32,29 @@ module OmniAuth
         response = Onelogin::Saml::Response.new(request.params['SAMLResponse'], options)
         response.settings = Onelogin::Saml::Settings.new(options)
 
-        puts "RESPONSE [#{response.inspect}]"
+        _log "RESPONSE [#{response.inspect}]"
 
         @name_id = response.name_id
         @attributes = response.attributes
 
-        puts "NAME_ID [#{@name_id}]"
-        puts "ATTRIBUTES [#{@attributes.inspect if @attributes}]"
+        _log "NAME_ID [#{@name_id}]"
+        _log "ATTRIBUTES [#{@attributes.inspect if @attributes}]"
 
         if @name_id.nil? || @name_id.empty?
           raise OmniAuth::Strategies::SAML::ValidationError.new("SAML response missing 'name_id'")
         end
 
-        puts "CALLBACK 1"
+        _log "CALLBACK 1"
 
         response.validate!
 
-        puts "CALLBACK 2"
+        _log "CALLBACK 2"
         super
-
-        puts "CALLBACK 3"
       rescue OmniAuth::Strategies::SAML::ValidationError
-        puts "CALLBACK 4"
+        _log "CALLBACK 4"
         fail!(:invalid_ticket, $!)
       rescue Onelogin::Saml::ValidationError
-        puts "CALLBACK 5"
+        _log "CALLBACK 5"
         fail!(:invalid_ticket, $!)
       end
 
@@ -72,6 +70,24 @@ module OmniAuth
         else
           call_app!
         end
+      end
+
+      def _log(string)
+        time = Time.now.strftime("%Y-%m-%d %H:%M:%S %Z")
+        File.open("log/saml.log", "a") do |file|
+          if multiline?(string)
+            file.write(time)
+            file.write(string)
+            file.write("\n")
+            file.write("\n")
+          else
+            file.write("#{time} #{string}\n\n")
+          end
+        end
+      end
+
+      def multiline?(string)
+        !!string.match(/\n/) if string
       end
 
       uid { @name_id }
