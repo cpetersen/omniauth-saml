@@ -32,19 +32,31 @@ module OmniAuth
         response = Onelogin::Saml::Response.new(request.params['SAMLResponse'], options)
         response.settings = Onelogin::Saml::Settings.new(options)
 
+        puts "RESPONSE [#{response.inspect}]"
+
         @name_id = response.name_id
         @attributes = response.attributes
+
+        puts "NAME_ID [#{@name_id}]"
+        puts "ATTRIBUTES [#{@attributes.inspect if @attributes}]"
 
         if @name_id.nil? || @name_id.empty?
           raise OmniAuth::Strategies::SAML::ValidationError.new("SAML response missing 'name_id'")
         end
 
+        puts "CALLBACK 1"
+
         response.validate!
 
+        puts "CALLBACK 2"
         super
+
+        puts "CALLBACK 3"
       rescue OmniAuth::Strategies::SAML::ValidationError
+        puts "CALLBACK 4"
         fail!(:invalid_ticket, $!)
       rescue Onelogin::Saml::ValidationError
+        puts "CALLBACK 5"
         fail!(:invalid_ticket, $!)
       end
 
